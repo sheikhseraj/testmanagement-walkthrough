@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testmanagement & Teststeuerung · Akkodis / Volkswagen · Interaktiver Walkthrough</title>
+<style>
+:root{--bg:#edf3f6;--paper:#fff;--ink:#132a36;--muted:#5f7382;--line:#cfdde3;--soft:#f5f9fa;
+--plan:#2468aa;--test:#087f83;--auto:#7c3aed;--control:#b0701a;--defect:#c24b4b;--people:#5b6c8f;--cloud:#4f46e5;--dark:#0e3b43;--amber:#e39a2d}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:"Segoe UI",Inter,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+body{display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:40;min-height:58px;background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 18px 8px 22px;flex-wrap:wrap}
+.brand{font-weight:800;font-size:14px}.brand span{font-weight:500;color:var(--muted)}
+.ctrl{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+button,select{height:36px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:9px;font:inherit;font-size:12.5px;padding:0 11px;cursor:pointer}
+button:hover,select:hover{border-color:var(--test)}button:focus-visible,select:focus-visible,.node:focus-visible,.pill:focus-visible{outline:3px solid var(--test);outline-offset:2px}
+button.primary{background:var(--dark);border-color:var(--dark);color:#fff}
+#sel{min-width:330px}#speed{min-width:78px}
+.stage{flex:1;overflow:auto;padding:16px;display:flex;justify-content:center;align-items:flex-start}
+.sizer{position:relative;flex:none}
+.board{position:absolute;top:0;left:0;width:1700px;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 42px #0f274412;padding:20px;transform-origin:top left}
+#svg{position:absolute;inset:0;pointer-events:none;z-index:8;overflow:visible}
+.title{display:flex;justify-content:space-between;gap:24px;margin-bottom:12px}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:.16em;color:var(--test);text-transform:uppercase}
+h1{margin:4px 0 3px;font-size:25px;letter-spacing:-.02em;font-family:Cambria,Georgia,serif}
+.sub{font-size:11.5px;color:var(--muted)}.status{font-size:10.5px;color:var(--test);font-weight:700;margin-top:6px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.pill{font-size:10.5px;border:1px solid var(--line);border-radius:99px;padding:5px 10px;background:var(--paper);cursor:pointer;color:var(--ink);height:auto}
+.pill.on{background:var(--dark);border-color:var(--dark);color:#fff}
+.metrics{display:grid;grid-template-columns:repeat(4,132px);gap:8px;align-self:flex-start}
+.metric{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--soft)}
+.metric strong{display:block;font-size:24px;line-height:1;color:var(--amber);font-family:Cambria,Georgia,serif}
+.metric b{display:block;font-size:11px;margin-top:5px}.metric small{display:block;font-size:9.5px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:230px 1fr 330px;gap:14px}
+.panel{border:1px solid var(--line);border-radius:11px;background:var(--soft);padding:11px;position:relative}
+.panel h2{margin:0 0 3px;font-size:12.5px;color:var(--dark)}.hint{font-size:9.5px;color:var(--muted);margin-bottom:9px}
+.p-plan{background:#f3f7fc}.p-test{background:#f0f8f8}.p-auto{background:#f7f4fe}.p-defect{background:#fdf6f2}.p-cloud{background:#f5f5fe}.p-people{background:#f4f6f9}
+.center{display:grid;gap:12px}
+.row{display:grid;gap:10px}.r5{grid-template-columns:repeat(5,1fr)}.r4{grid-template-columns:repeat(4,1fr)}.r6{grid-template-columns:repeat(6,1fr)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.sublabel{font-size:9px;font-weight:800;letter-spacing:.12em;color:var(--muted);margin:2px 0 6px;text-transform:uppercase}
+.node{background:var(--paper);border:1.6px solid var(--line);border-radius:9px;padding:8px 10px;min-height:50px;position:relative;transition:opacity .25s,box-shadow .25s,transform .25s,filter .25s;cursor:pointer}
+.node .name{font-size:11.5px;font-weight:800;line-height:1.25}.node .small{font-size:9.6px;color:var(--muted);margin-top:3px;line-height:1.35}
+.node[data-kind=plan]{border-color:#9cc0e6}.node[data-kind=test]{border-color:#8fcfcf}.node[data-kind=auto]{border-color:#c2a5fb}
+.node[data-kind=control]{border-color:#e8c48f}.node[data-kind=defect]{border-color:#eba9a9}.node[data-kind=people]{border-color:#b7c0d3}.node[data-kind=cloud]{border-color:#b0abf6}
+.node.me{background:var(--dark);border-color:var(--dark);color:#fff}.node.me .small{color:#bfe0e2}
+.node.active{box-shadow:0 0 0 3px #087f8322,0 7px 18px #0f274418;transform:translateY(-1px)}
+.node.dim{opacity:.16;filter:grayscale(.7)}
+.blank{visibility:hidden}
+.right{background:#fffaf4;display:flex;flex-direction:column}
+.stepcount{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--test)}
+.right h3{margin:6px 0 6px;font-size:19px;line-height:1.2;font-family:Cambria,Georgia,serif}
+.intro{font-size:11.5px;color:var(--muted);line-height:1.5;margin:0 0 10px}
+.steps{display:flex;flex-direction:column;gap:7px}
+.step{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:7px 8px;display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start}
+.step .num{width:22px;height:22px;border-radius:50%;background:var(--dark);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.step .txt{font-size:11px;line-height:1.45}
+.take{margin-top:11px;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--test);border-radius:6px;padding:9px 11px;font-size:11px;line-height:1.5}
+.take b{display:block;margin-bottom:2px;color:var(--test)}
+.extra{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.extra:empty{display:none}
+.mini{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:8px}.mini b{display:block;font-size:14px;color:var(--dark)}.mini span{font-size:9.5px;color:var(--muted)}
+.extra a{grid-column:1/-1;font-size:11px;color:var(--cloud);font-weight:700;text-decoration:none}.extra a:hover{text-decoration:underline}
+.nav{display:flex;justify-content:space-between;gap:6px;margin-top:auto;padding-top:12px}
+.progress{height:4px;border-radius:4px;background:var(--line);margin-top:9px;overflow:hidden}.progress div{height:100%;background:var(--test);transition:width .3s}
+.week{margin-top:12px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:10px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:10px;color:var(--muted)}
+.statusbar{background:var(--paper);border-top:1px solid var(--line);padding:8px 22px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.kbd{border:1px solid var(--line);border-radius:3px;padding:0 4px;font-size:10px}
+path.flow{fill:none;stroke-width:2.3;opacity:.92}path.flow.feedback{stroke-dasharray:6 5}
+.label{font-size:9.5px;font-weight:700;fill:#33475a}.lblbg{fill:#fff;stroke-width:1;opacity:.96}
+body[data-theme=dark]{--bg:#0a1720;--paper:#0f222c;--ink:#e4eff3;--muted:#a3b7c2;--line:#2c4655;--soft:#132a35;--dark:#58c9c4}
+body[data-theme=dark] .p-plan,body[data-theme=dark] .p-test,body[data-theme=dark] .p-auto,body[data-theme=dark] .p-defect,body[data-theme=dark] .p-cloud,body[data-theme=dark] .p-people,body[data-theme=dark] .right{background:#122733}
+body[data-theme=dark] .node.me{background:#1d5a63;border-color:#58c9c4}body[data-theme=dark] .step .num,body[data-theme=dark] button.primary,body[data-theme=dark] .pill.on{background:#58c9c4;border-color:#58c9c4;color:#0a1720}
+body[data-theme=dark] .label{fill:#e4eff3}body[data-theme=dark] .lblbg{fill:#0f222c}
+@media print{.top,.statusbar,.nav{display:none}.stage{overflow:visible}}
+</style>
+</head>
+<body data-theme="light">
+<div class="top">
+  <div class="brand">PTA · Fachpräsentation <span>/ Interaktiver Walkthrough · Seraj Ahmad Siddiqui</span></div>
+  <div class="ctrl">
+    <button id="play" title="Animation anhalten oder fortsetzen">Ⅱ Pause</button>
+    <select id="speed" aria-label="Geschwindigkeit"><option value="0.6">0,6×</option><option value="1" selected>1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select>
+    <button id="theme" title="Hell / Dunkel">◐ Dunkel</button>
+    <select id="sel" aria-label="Ansicht wählen">
+      <option value="all">Übersicht · Gesamtprozess live</option>
+      <option value="auto">Auto-Präsentation · Bereiche 1 → 8</option>
+      <optgroup label="Verantwortungsbereiche">
+        <option value="konzept">1 · Teststrategie & Testkonzept</option>
+        <option value="planung">2 · Planung & Ressourcen</option>
+        <option value="steuerung">3 · Teststeuerung & Wochenrhythmus</option>
+        <option value="durchfuehrung">4 · Testdurchführung & Teststufen</option>
+        <option value="automation">5 · Testautomatisierung</option>
+        <option value="defects">6 · Defect Management</option>
+        <option value="freigabe">7 · Reporting & Freigabe</option>
+        <option value="cloud">8 · Weiterbildung AWS Cloud & KI</option>
+      </optgroup>
+      <optgroup label="Projektbeispiele">
+        <option value="bsp1">Beispiel 1 · ORU – risikobasiert testen</option>
+        <option value="bsp2">Beispiel 2 · MOD – Defects nachverfolgen</option>
+        <option value="bsp3">Beispiel 3 · Planung & Kapazität</option>
+        <option value="bsp4">Beispiel 4 · Testautomatisierung eingeführt</option>
+      </optgroup>
+      <optgroup label="End-to-End-Abläufe">
+        <option value="e2e">Ablauf · Anforderung → Freigabe</option>
+        <option value="cycle">Ablauf · Defect-Lebenszyklus mit Nachtest</option>
+        <option value="stufen">Ablauf · Teststufen QT → VT → Freigabetest</option>
+        <option value="mod">Ablauf · MOD-Testfall Login / Enrollment</option>
+      </optgroup>
+    </select>
+    <button id="prevTop" title="Vorherige Ansicht">←</button><button id="nextTop" title="Nächste Ansicht">→</button>
+    <button id="minus">−</button><button id="fit">Fit</button><button id="plus">+</button><button id="full">⛶ Vollbild</button>
+  </div>
+</div>
+
+<div class="stage" id="stage"><div class="sizer" id="sizer"><div class="board" id="board"><svg id="svg"></svg>
+
+<div class="title">
+  <div>
+    <div class="eyebrow">Akkodis · Kunde Volkswagen · 10/2023 – 10/2025</div>
+    <h1>Gesamtverantwortung für Testmanagement & Teststeuerung</h1>
+    <div class="sub">ORU – Online Remote Update &nbsp;·&nbsp; MOD – Mobile Online Dienste &nbsp;|&nbsp; Fachliche Verantwortung auf Akkodis-Seite – von der Anforderung bis zur Freigabeempfehlung</div>
+    <div class="status" id="status">Übersicht · Gesamtprozess live</div>
+    <div class="pills" id="pills"></div>
+  </div>
+  <div class="metrics">
+    <div class="metric"><strong>11</strong><b>Testingenieure</b><small>fachlich gesteuert</small></div>
+    <div class="metric"><strong>2</strong><b>Projekte parallel</b><small>ORU & MOD</small></div>
+    <div class="metric"><strong>100+</strong><b>Beteiligte</b><small>im Defect-Prozess</small></div>
+    <div class="metric"><strong>≈ 30 %</strong><b>kürzere Testlaufzeit</b><small>9–10 Std. → 6–7 Std.</small></div>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- LEFT: people & interfaces -->
+  <section class="panel p-people"><h2>Schnittstellen</h2><div class="hint">Kunde, Team und interne Abstimmung</div>
+    <div class="stack">
+      <div class="node" id="vwpl" data-kind="people"><div class="name">VW-Projektleitung</div><div class="small">Di + Do · Anforderungen & Status</div></div>
+      <div class="node" id="vwmgmt" data-kind="people"><div class="name">VW-Management</div><div class="small">Finale Freigabeentscheidung</div></div>
+      <div class="node" id="dev" data-kind="people"><div class="name">Entwicklung</div><div class="small">Fahrzeug · Backend · App</div></div>
+      <div class="node" id="qa" data-kind="people"><div class="name">2 QA-Manager</div><div class="small">Gemeinsame Ticketbewertung</div></div>
+      <div class="node" id="tmr" data-kind="people"><div class="name">Testmanager-Runde</div><div class="small">Akkodis · Kapazität ausgleichen</div></div>
+      <div class="node me" id="me" data-kind="people"><div class="name">Ich – Testmanager</div><div class="small">Akkodis · ORU & MOD</div></div>
+      <div class="node" id="team" data-kind="people"><div class="name">11 Testingenieure</div><div class="small">Prüfstand · Fahrzeug · Testfahrt</div></div>
+    </div>
+  </section>
+
+  <!-- CENTER -->
+  <div class="center">
+    <section class="panel p-plan"><h2>01 · Konzeption & Planung</h2><div class="hint">ORU: Testkonzept neu erstellt · MOD: bestehendes Konzept weiterentwickelt</div>
+      <div class="row r5">
+        <div class="node" id="req" data-kind="plan"><div class="name">Anforderungen</div><div class="small">Codebeamer · DOORS · offene Punkte klären</div></div>
+        <div class="node" id="risk" data-kind="plan"><div class="name">Risikoanalyse</div><div class="small">Wahrscheinlichkeit × Auswirkung</div></div>
+        <div class="node" id="concept" data-kind="plan"><div class="name">Teststrategie & Testkonzept</div><div class="small">Umfang · In / Out of Scope · Kriterien</div></div>
+        <div class="node" id="plan" data-kind="plan"><div class="name">Testplanung</div><div class="small">cplace → eigene Excel-Planung · Releases</div></div>
+        <div class="node" id="res" data-kind="plan"><div class="name">Ressourcen & Aufgaben</div><div class="small">11 Tester · Prioritäten · Umgebungen</div></div>
+      </div>
+    </section>
+
+    <section class="panel p-test"><h2>02 · Testdurchführung</h2><div class="hint">Teststufen je nach Änderung · jede Umgebung näher an der Realität</div>
+      <div class="sublabel">Teststufen</div>
+      <div class="row r4">
+        <div class="node" id="qt" data-kind="test"><div class="name">QT · Quick Test</div><div class="small">Smoke-Test der Grundfunktionen</div></div>
+        <div class="node" id="vt" data-kind="test"><div class="name">VT · Voll Test</div><div class="small">System- und End-to-End-Test</div></div>
+        <div class="node" id="ft" data-kind="test"><div class="name">Freigabetest</div><div class="small">Letzte Absicherung vor dem Release</div></div>
+        <div class="node" id="tc" data-kind="test"><div class="name">Testfall-Aufbau</div><div class="small">ID · Vorbedingung · Aktion · Erwartet · KPM-Ticket</div></div>
+      </div>
+      <div class="sublabel" style="margin-top:10px">Testumgebungen</div>
+      <div class="row r4">
+        <div class="node" id="bench" data-kind="test"><div class="name">Prüfstand</div><div class="small">Simulation mit Vector-Hardware</div></div>
+        <div class="node" id="vehicle" data-kind="test"><div class="name">Fahrzeug</div><div class="small">Funktionen am realen Fahrzeug</div></div>
+        <div class="node" id="drive" data-kind="test"><div class="name">Testfahrt</div><div class="small">Vor Freigabe · 2 Tester: Fahrer + Test</div></div>
+        <div class="node" id="results" data-kind="test"><div class="name">Testergebnisse</div><div class="small">OK · nOK · blocked · Excel · Jira</div></div>
+      </div>
+    </section>
+
+    <section class="panel p-auto"><h2>03 · Testautomatisierung</h2><div class="hint">Von 100 % manuell zu teilautomatisiert – stabile Tests zuerst, nicht alles um jeden Preis</div>
+      <div class="row r5">
+        <div class="node" id="manual" data-kind="auto"><div class="name">Ausgangslage</div><div class="small">Testläufe zu 100 % manuell · 9–10 Std.</div></div>
+        <div class="node" id="select" data-kind="auto"><div class="name">Testfälle auswählen</div><div class="small">Stabil · wiederkehrend · Grundfunktionen</div></div>
+        <div class="node" id="data" data-kind="auto"><div class="name">Testdaten</div><div class="small">Positiv: gültig · Negativ: ungültig</div></div>
+        <div class="node" id="autorun" data-kind="auto"><div class="name">Automatisierte Testläufe</div><div class="small">Wiederholbar · Smoke & Regression</div></div>
+        <div class="node" id="effect" data-kind="auto"><div class="name">Ergebnis</div><div class="small">6–7 Std. pro Testlauf · ≈ 30 % weniger</div></div>
+      </div>
+      <div class="row r5" style="margin-top:10px">
+        <div class="blank"></div>
+        <div class="node" id="manualkeep" data-kind="auto"><div class="name">Bewusst manuell</div><div class="small">Fahrzeug- & Testfahrt-Schritte</div></div>
+        <div class="blank"></div>
+        <div class="node" id="autodoc" data-kind="auto"><div class="name">Ergebnisse dokumentiert</div><div class="small">Gemeinsam mit manuellen Tests</div></div>
+        <div class="blank"></div>
+      </div>
+    </section>
+
+    <section class="panel p-defect"><h2>04 · Defects, Reporting & Freigabe</h2><div class="hint">Mi + Fr Defect-Meetings · über 100 Beteiligte · sachliche Eskalation · Empfehlung an VW</div>
+      <div class="row r4">
+        <div class="node" id="triage" data-kind="defect"><div class="name">Defect-Bewertung</div><div class="small">Schwere · Priorität · zuständiges Team</div></div>
+        <div class="node" id="list" data-kind="control"><div class="name">Ticketliste vorab</div><div class="small">Mo → für Mi · Mi → für Fr</div></div>
+        <div class="node" id="meeting" data-kind="defect"><div class="name">Defect-Meeting</div><div class="small">Status · Lösungstermin · Blocker</div></div>
+        <div class="node" id="escal" data-kind="control"><div class="name">Eskalation</div><div class="small">E-Mail → Führungskraft → VW-PL informiert</div></div>
+      </div>
+      <div class="row r4" style="margin-top:10px">
+        <div class="node" id="fix" data-kind="defect"><div class="name">Fix & Nachtest</div><div class="small">Re-Test · bei Bedarf Regression</div></div>
+        <div class="node" id="kpi" data-kind="control"><div class="name">Kennzahlen</div><div class="small">Fortschritt · OK/nOK/blocked · krit. Defects</div></div>
+        <div class="node" id="report" data-kind="control"><div class="name">Testreport</div><div class="small">Ergebnisse · offene Fehler · Restrisiko</div></div>
+        <div class="node" id="rec" data-kind="control"><div class="name">Freigabeempfehlung</div><div class="small">Meine Bewertung an VW-Projektleitung</div></div>
+      </div>
+    </section>
+
+    <section class="panel p-cloud"><h2>05 · Weiterbildung AWS Cloud & KI – Mehrwert für TM/QA</h2><div class="hint">Abschlussprojekt LangNation Cloud Platform · 07–10/2026 · getrennt von Akkodis</div>
+      <div class="row r4">
+        <div class="node" id="gates" data-kind="cloud"><div class="name">Quality Gates in CI/CD</div><div class="small">Tests · Terraform · Smoke · Trivy blockt CRITICAL</div></div>
+        <div class="node" id="mon" data-kind="cloud"><div class="name">Monitoring</div><div class="small">CloudWatch · 9 Alarme · CloudTrail-Audit</div></div>
+        <div class="node" id="resil" data-kind="cloud"><div class="name">Ausfallsicherheit getestet</div><div class="small">Task gestoppt · Recovery ≈ 44 s · Health 200</div></div>
+        <div class="node" id="rag" data-kind="cloud"><div class="name">KI & RAG</div><div class="small">Wissensbasis · Antworten mit Quellen</div></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- RIGHT -->
+  <section class="panel right" aria-live="polite">
+    <div class="stepcount" id="stepcount">GESAMTÜBERBLICK</div>
+    <h3 id="dtitle"></h3>
+    <p class="intro" id="intro"></p>
+    <div class="steps" id="steps"></div>
+    <div class="take"><b id="takeTitle">Meine Verantwortung</b><span id="take"></span></div>
+    <div class="extra" id="extra"></div>
+    <div class="nav"><button id="prev">← Zurück</button><button id="next" class="primary">Weiter →</button></div>
+    <div class="progress"><div id="progress"></div></div>
+  </section>
+</div>
+
+<section class="panel week"><h2>Mein Wochenrhythmus</h2><div class="hint">Feste Termine schaffen Verbindlichkeit – für Team, Entwicklung und Kunde</div>
+  <div class="row r6">
+    <div class="node" id="daily" data-kind="people"><div class="name">Täglich · 15 Min.</div><div class="small">Team: Stand · Blocker · nächste Aufgaben</div></div>
+    <div class="node" id="mo" data-kind="control"><div class="name">Montag</div><div class="small">Ticketliste für Mittwoch versenden</div></div>
+    <div class="node" id="di" data-kind="plan"><div class="name">Dienstag</div><div class="small">VW-Projektleitung & Stakeholder</div></div>
+    <div class="node" id="mi" data-kind="defect"><div class="name">Mittwoch</div><div class="small">Defect-Meeting · Liste für Freitag</div></div>
+    <div class="node" id="do" data-kind="plan"><div class="name">Donnerstag</div><div class="small">VW-Projektleitung & Stakeholder</div></div>
+    <div class="node" id="fr" data-kind="defect"><div class="name">Freitag</div><div class="small">Defect-Meeting · Nachverfolgung</div></div>
+  </div>
+</section>
+
+<div class="legend">
+  <span><i class="dot" style="background:var(--plan)"></i>Konzeption & Planung</span><span><i class="dot" style="background:var(--test)"></i>Durchführung</span>
+  <span><i class="dot" style="background:var(--auto)"></i>Automatisierung</span><span><i class="dot" style="background:var(--defect)"></i>Defects / Nachtest</span>
+  <span><i class="dot" style="background:var(--control)"></i>Steuerung & Freigabe</span><span><i class="dot" style="background:var(--people)"></i>Team & Stakeholder</span>
+  <span><i class="dot" style="background:var(--cloud)"></i>AWS & KI</span>
+</div>
+<div class="foot"><div>Vereinfachte Prozessdarstellung auf Basis meiner Tätigkeit · keine internen VW-Daten, Ticketnummern oder Versionsstände.</div><div>Gestrichelt = Rückkopplung (Nachtest nach Fix)</div></div>
+</div></div></div>
+
+<div class="statusbar"><div><b>Tastatur:</b> <span class="kbd">1–8</span> Bereiche · <span class="kbd">← →</span> nächste Ansicht · <span class="kbd">A</span> Übersicht · <span class="kbd">S</span> Auto · <span class="kbd">Leertaste</span> Pause · <span class="kbd">F</span> Vollbild</div><div>Vorschlag: Übersicht → Auto-Präsentation → Projektbeispiele 1–4</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const board=$('board'),sizer=$('sizer'),stage=$('stage'),svg=$('svg'),sel=$('sel');
+let scale=1,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,speed=1,autoIdx=0,autoTimer=null;
+const COLORS={plan:'#2468aa',test:'#087f83',auto:'#7c3aed',defect:'#c24b4b',control:'#b0701a',people:'#5b6c8f',cloud:'#4f46e5'};
+
+/* ---------- views: flows [from,to,kind,label,feedback?], extra active nodes, texts ---------- */
+const V={
+konzept:{n:'1',name:'Teststrategie & Testkonzept',
+ flows:[['vwpl','req','plan','Di/Do'],['req','risk','plan','bewerten'],['risk','concept','plan','priorisieren'],['concept','plan','plan','umsetzen'],['concept','qt','plan','Teststufen']],
+ nodes:['me','vt','ft'],
+ title:'ORU neu, MOD weiterentwickelt',intro:'Zwei Ausgangslagen – ein strukturiertes Vorgehen in sechs Schritten.',
+ steps:['Anforderungen aus Codebeamer und DOORS verstehen, offene Punkte mit Entwicklung klären.','Risiken nach Wahrscheinlichkeit × Auswirkung bewerten.','Testumfang festlegen: In Scope und bewusst Out of Scope.','Teststufen planen: Quick Test → Voll Test → Freigabetest.','Umgebung, Team und Testdaten klären; Entry-/Exit-Kriterien und Reporting festlegen.','ORU: Konzept von Grund auf erstellt · MOD: übernommen und mit Releases weiterentwickelt.'],
+ take:'Strategie beantwortet „Was ist kritisch?“ – das Konzept beantwortet „Wie setzen wir es um?“'},
+planung:{n:'2',name:'Planung & Ressourcen',
+ flows:[['vwpl','req','plan','Di/Do'],['req','plan','plan','einplanen'],['plan','res','plan','Aufgaben'],['tmr','res','people','freie Tester'],['res','team','people','verteilen'],['me','team','people','fachlich']],
+ nodes:[],
+ title:'Ressourcen und Termine steuern',intro:'Eigene Planung, klare Zuständigkeiten und laufender Abgleich mit dem Kunden.',
+ steps:['Neue Anforderungen aus den Di/Do-Terminen mit VW direkt einplanen.','Planung zuerst in cplace, später eigene automatisierte Excel-Planung inkl. Software-Releases.','Aufgaben und Prioritäten an 11 Testingenieure verteilen.','Prüfstände, Fahrzeuge und Tester zum richtigen Zeitpunkt verfügbar machen.','Bei Engpässen freie Tester über die Testmanager-Runde bei Akkodis anfragen.'],
+ take:'Engpässe früh sichtbar machen und Kapazität aktiv ausgleichen – nicht nur melden.'},
+steuerung:{n:'3',name:'Teststeuerung & Wochenrhythmus',
+ flows:[['daily','team','people','Stand · Blocker'],['me','team','people','täglich 15 Min.'],['mo','list','control','Liste für Mi'],['di','vwpl','plan','Abstimmung'],['mi','meeting','defect','Meeting'],['do','vwpl','plan','Abstimmung'],['fr','meeting','defect','Meeting']],
+ nodes:[],
+ title:'Feste Termine, klare Verbindlichkeit',intro:'Zwei Projekte parallel funktionieren nur mit einem festen Rhythmus.',
+ steps:['Täglich 15 Minuten mit dem Team: Wo stehen wir, was blockiert, was kommt als Nächstes?','Montag: Ticketliste für das Mittwochs-Meeting an die Zuständigen senden.','Dienstag und Donnerstag: Abstimmung mit VW-Projektleitung und Stakeholdern.','Mittwoch und Freitag: Defect-Meetings – danach aktualisierte Liste an alle.','Kreislauf: Anforderungen aufnehmen → Aufgaben verteilen → Fortschritt prüfen → nachsteuern.'],
+ take:'Ich war der zentrale Ansprechpartner, bei dem Anforderungen, Team, Fehler und Freigabe zusammenliefen.'},
+durchfuehrung:{n:'4',name:'Testdurchführung & Teststufen',
+ flows:[['res','bench','test','Tester & Slots'],['qt','vt','test','nächste Stufe'],['vt','ft','test','vor Release'],['qt','bench','test','Smoke / Quick'],['bench','vehicle','test','realer'],['vehicle','drive','test','vor Freigabe'],['drive','results','test','dokumentieren'],['tc','results','test','Struktur']],
+ nodes:[],
+ title:'Vom Prüfstand bis zur Testfahrt',intro:'Teststufe und Umgebung richten sich nach der Änderung und dem Risiko.',
+ steps:['Quick Test: Smoke-Test der Grundfunktionen nach einem neuen Softwarestand.','Voll Test: System- und End-to-End-Test.','Freigabetest: letzte Absicherung vor dem Release.','Prüfstand mit Vector-Hardware → reales Fahrzeug → Testfahrt im Stadtverkehr.','Testfahrt immer mit zwei Testern: eine Person fährt, die andere testet und dokumentiert.','Ergebnisse in Excel und Jira, Dokumentation in Confluence; Fehler als KPM-Ticket am Testfall.'],
+ take:'Die richtige Teststufe und Umgebung wählen – und Prüfstände, Fahrzeuge und Tester rechtzeitig organisieren.'},
+automation:{n:'5',name:'Testautomatisierung',
+ flows:[['manual','select','auto','analysieren'],['select','data','auto','stabile Tests'],['data','autorun','auto','gültig / ungültig'],['select','manualkeep','auto','nicht geeignet'],['autorun','autodoc','auto','Ergebnisse'],['manualkeep','autodoc','auto','Ergebnisse'],['autorun','effect','auto','Laufzeit']],
+ nodes:[],
+ title:'Stabile Tests zuerst automatisieren',intro:'Ein vollständig manueller Testablauf wurde schrittweise teilautomatisiert.',
+ steps:['Ausgangslage: Testläufe zu 100 % manuell, ca. 9–10 Stunden.','Analysieren: Welche Testfälle sind stabil und wiederholen sich oft?','Klein starten: zuerst stabile Grundfunktionen automatisieren.','Positivtests mit gültigen, Negativtests mit ungültigen Daten.','Fahrzeug- und Testfahrt-Schritte bewusst manuell lassen.','Ergebnis: 6–7 Stunden pro Testlauf – rund 30 % weniger.'],
+ take:'Automatisierung ist kein Selbstzweck: Sie entlastet das Team für kritische und explorative Tests.',
+ extra:'<div class="mini"><b>9–10 Std.</b><span>Vorher · manuell</span></div><div class="mini"><b>6–7 Std.</b><span>Nachher · teilautomatisiert</span></div><div class="mini"><b>≈ 30 %</b><span>Laufzeitvergleich, keine Vollmessung</span></div>'},
+defects:{n:'6',name:'Defect Management',
+ flows:[['results','triage','defect','nOK'],['qa','triage','people','gemeinsam'],['triage','dev','defect','zuständiges Team'],['list','meeting','control','Liste vorab'],['dev','meeting','defect','Status · Termin'],['meeting','escal','control','keine Rückmeldung'],['escal','vwpl','control','informieren'],['dev','fix','defect','Fix'],['fix','results','defect','Nachtest',1]],
+ nodes:['mi','fr'],
+ title:'Defects bewerten, steuern, eskalieren',intro:'Über 100 Beteiligte im Abstimmungsumfeld – keine direkte Führung von 100 Personen.',
+ steps:['Neue Tickets mit zwei QA-Managern bewerten: Schwere, Priorität, zuständiges Team (Fahrzeug, Backend, App).','Ticketliste vorab: Montag für Mittwoch, Mittwoch für Freitag.','Im Meeting neue und alte Tickets: gelöst? Lösungstermin? Blocker – und warum?','Danach aktualisierte Liste an alle; Abwesenden eine separate E-Mail.','Keine Rückmeldung: formelle E-Mail → Führungskraft → VW-Projektleitung informieren.','Nach dem Fix: Nachtest und bei Bedarf Regression.'],
+ take:'Jeder offene Defect braucht einen Verantwortlichen, einen Status und einen Termin. Eskalation ist sachlich, nie persönlich.'},
+freigabe:{n:'7',name:'Reporting & Freigabe',
+ flows:[['results','kpi','control','Kennzahlen'],['meeting','report','control','offene Defects'],['kpi','report','control','Fortschritt'],['report','rec','control','Bewertung'],['rec','vwpl','control','Empfehlung'],['vwpl','vwmgmt','control','Entscheidung']],
+ nodes:['me'],
+ title:'Eine fundierte Empfehlung geben',intro:'Testreporting als Grundlage für die Entscheidung des Kunden.',
+ steps:['Testfortschritt und Ergebnisse je Funktion zusammenfassen; Status Di/Do an VW.','Jeden offenen Defect risikobasiert bewerten.','Qualitätskriterium: keine kritischen Fehler offen.','Testreport vor der Freigabe erstellen und mit der VW-Projektleitung besprechen.','Meine Empfehlung geben – die finale Entscheidung trifft das VW-Management.'],
+ take:'Eine hohe Pass-Rate allein reicht nicht. Entscheidend ist, welche Risiken noch offen sind.'},
+cloud:{n:'8',name:'Weiterbildung AWS Cloud & KI',
+ flows:[['gates','mon','cloud','Release überwacht'],['mon','resil','cloud','Alarm / Health']],
+ nodes:['rag'],
+ title:'Mehrwert für TM/QA',intro:'Abschlussprojekt LangNation Cloud Platform, Juli–Oktober 2026 – getrennt von der Tätigkeit bei Akkodis.',
+ steps:['Quality Gates: Tests, Terraform-Prüfung, Container-Smoke-Test und Trivy-Scan vor jedem Deployment.','Eine kritische Lücke im Basis-Image stoppte das Deployment – Image aktualisiert, Regel nicht abgeschwächt.','Monitoring: CloudWatch-Dashboard, 9 Alarme, CloudTrail-Audit.','Recovery-Test: ECS-Task gestoppt, Wiederherstellung nach ca. 44 Sekunden, Health blieb 200.','KI: RAG-Assistent mit eigener Wissensbasis und Quellenangaben.','Bei PTA: KI-Testfallentwürfe, Log-Analyse, Quality Gates – mit fachlicher Prüfung, EU AI Act und Datenschutz.'],
+ take:'Praxis aus der Weiterbildung – ohne zu behaupten, bereits KI-Prozesse bei einem Kunden eingeführt zu haben.',
+ extra:'<div class="mini"><b>Quality Gates</b><span>Trivy blockt CRITICAL</span></div><div class="mini"><b>≈ 44 s</b><span>Recovery im Test</span></div><div class="mini"><b>RAG</b><span>Antworten mit Quellen</span></div><a href="https://sheikhseraj.github.io/langnation-cloud-platform/interactive/langnation-architecture-m01-m12.html" target="_blank" rel="noopener">▶ Live-Architektur LangNation M1–M12 öffnen</a>'},
+bsp1:{name:'Beispiel 1 · ORU',
+ flows:[['vwpl','req','plan','ORU neu'],['req','risk','plan','Update-Abbruch'],['risk','concept','plan','zuerst absichern'],['concept','qt','plan','Teststufen'],['qt','bench','test','Prüfstand'],['bench','vehicle','test','Fahrzeug'],['vehicle','results','test','Status & SW-Stand']],
+ nodes:['me','data'],
+ title:'ORU: risikobasiert testen',intro:'Neues Projekt ohne Testkonzept – das größte Risiko: ein unterbrochenes Update.',
+ steps:['Situation: kein bestehendes Testkonzept; Fehler betreffen direkt das Fahrzeug des Kunden.','Risiken mit Entwicklung und VW-Projektleitung bewertet.','Abbruch, Wiederaufnahme und Update-Status zuerst getestet.','Positivtests mit gültigen, Negativtests mit ungültigen Daten; erst Prüfstand, dann Fahrzeug.','In Scope: Download, Installation, Verbindungsabbruch, Update-Status, Softwarestand.','Out of Scope (dokumentiert): Navigation, Infotainment, Bluetooth – sofern nicht betroffen.'],
+ take:'Ergebnis: kritische Update-Szenarien vor jeder Freigabe abgesichert, klare Testbasis für das Team.',takeTitle:'Ergebnis'},
+bsp2:{name:'Beispiel 2 · MOD',
+ flows:[['results','triage','defect','nOK'],['qa','triage','people','bewerten'],['triage','dev','defect','Fahrzeug/Backend/App'],['list','meeting','control','Mo → Mi · Mi → Fr'],['dev','meeting','defect','Status · Termin'],['meeting','escal','control','keine Rückmeldung'],['escal','vwpl','control','informieren'],['meeting','report','control','Grundlage']],
+ nodes:['mi','fr','me'],
+ title:'MOD: Defects konsequent nachverfolgen',intro:'Fahrzeug, Backend und App – viele Beteiligte, viele Abhängigkeiten.',
+ steps:['Situation: viele offene Tickets; einzelne Entwickler kamen nicht ins Meeting oder nannten keinen Termin.','Bewerten: neue Tickets mit 2 QA-Managern.','Vorbereiten: Excel-Liste vorab an die Zuständigen.','Moderieren: Status, Lösungstermin, Blocker – auch alte Tickets.','Nachverfolgen: Liste an alle, E-Mail an Abwesende.','Eskalation: E-Mail → Führungskraft → VW-Projektleitung informiert.'],
+ take:'Ergebnis: Jeder offene Defect hatte einen Verantwortlichen, einen Status und einen Termin – Grundlage für die Freigabeempfehlung.',takeTitle:'Ergebnis'},
+bsp3:{name:'Beispiel 3 · Planung',
+ flows:[['vwpl','req','plan','Di/Do'],['req','plan','plan','einplanen'],['plan','qt','plan','neuer SW-Stand'],['plan','res','plan','Kapazität'],['tmr','res','people','freie Tester'],['res','team','people','Aufgaben']],
+ nodes:['me','bench','vehicle','drive'],
+ title:'Planung & Kapazität',intro:'Zwei Projekte parallel, jede Woche neue Software-Stände und Anforderungen.',
+ steps:['Testplanung zuerst in cplace.','Eigene automatisierte Excel-Planung aufgebaut – Software-Releases sichtbar.','Auswirkung eines neuen Softwarestands auf Prüfstand, Fahrzeugtest und Testfahrt sofort erkennbar.','Neue Anforderungen aus den Di/Do-Terminen direkt eingeplant.','Bei Engpässen freie Tester über die Testmanager-Runde angefragt.'],
+ take:'Ergebnis: Engpässe früh sichtbar, Kapazität intern ausgeglichen.',takeTitle:'Ergebnis'},
+bsp4:{name:'Beispiel 4 · Automatisierung',
+ flows:[['manual','select','auto','analysieren'],['select','data','auto','Grundfunktionen'],['data','autorun','auto','pos. / neg.'],['select','manualkeep','auto','bleibt manuell'],['autorun','effect','auto','9–10 → 6–7 Std.'],['autorun','autodoc','auto','Report'],['manualkeep','autodoc','auto','Report']],
+ nodes:['me','team'],
+ title:'Testautomatisierung eingeführt',intro:'Ziel: Tester bei wiederkehrenden Abläufen entlasten.',
+ steps:['Ausgangslage: 100 % manuell.','Stabile, wiederkehrende Testfälle analysiert.','Klein gestartet – zuerst stabile Grundfunktionen.','Positive und negative Testdaten berücksichtigt.','Fahrzeug und Testfahrt bewusst manuell.','Testlauf: 9–10 Std. → 6–7 Std.'],
+ take:'Ergebnis: rund 30 % weniger Zeit pro Testlauf – mehr Zeit für kritische Tests.',takeTitle:'Ergebnis',
+ extra:'<div class="mini"><b>9–10 Std.</b><span>Vorher</span></div><div class="mini"><b>6–7 Std.</b><span>Nachher</span></div><div class="mini"><b>≈ 30 %</b><span>weniger pro Testlauf</span></div>'},
+e2e:{name:'Anforderung → Freigabe',
+ flows:[['vwpl','req','plan','Anforderung'],['req','risk','plan',''],['risk','concept','plan',''],['concept','plan','plan',''],['plan','res','plan',''],['res','bench','test','Durchführung'],['bench','vehicle','test',''],['vehicle','drive','test',''],['drive','results','test',''],['results','triage','defect','Defects'],['triage','meeting','defect',''],['meeting','report','control',''],['report','rec','control',''],['rec','vwpl','control','Empfehlung'],['vwpl','vwmgmt','control','Freigabe']],
+ nodes:['me','team'],
+ title:'Vom Kundenauftrag zur Freigabe',intro:'Der komplette Weg einer Anforderung – mit mir als zentralem Ansprechpartner.',
+ steps:['Anforderung von VW aufnehmen und Risiken bewerten.','Testkonzept, Planung und Ressourcen festlegen.','Durchführung: Prüfstand → Fahrzeug → Testfahrt.','Defects bewerten, nachverfolgen und nachtesten.','Testreport und Empfehlung an die VW-Projektleitung.','VW-Management trifft die Freigabeentscheidung.'],
+ take:'Ich habe den Testbereich fachlich gesteuert – die Freigabe selbst entscheidet der Kunde.'},
+cycle:{name:'Defect-Lebenszyklus',
+ flows:[['results','triage','defect','nOK'],['triage','dev','defect','zuordnen'],['dev','fix','defect','beheben'],['fix','results','defect','Nachtest',1],['dev','meeting','defect','Status']],
+ nodes:['qa'],
+ title:'Defect-Lebenszyklus mit Nachtest',intro:'Ein Fix ohne Nachtest ist kein Fix.',
+ steps:['Fehler reproduzieren und dokumentieren: Schritte, Softwarestand, Erwartet/Tatsächlich, Logs.','Bewerten: Severity und Priorität, zuständiges Team.','Zuordnen und im Defect-Meeting nachverfolgen.','Nach dem Fix: Nachtest und bei Bedarf Regression.','Status im Testfall und im KPM-Ticket aktualisieren.'],
+ take:'Reproduzieren → dokumentieren → bewerten → zuordnen → Re-Test.'},
+stufen:{name:'Teststufen',
+ flows:[['qt','vt','test','nächste Stufe'],['vt','ft','test','vor Release'],['qt','bench','test','Smoke'],['ft','results','test','Ergebnis'],['ft','report','control','Grundlage']],
+ nodes:['vehicle','drive'],
+ title:'Teststufen: QT → VT → Freigabetest',intro:'Die Testtiefe steigt mit jeder Stufe.',
+ steps:['QT · Quick Test: Smoke-Test der Grundfunktionen – läuft der neue Softwarestand überhaupt?','VT · Voll Test: System- und End-to-End-Test der Funktionen.','Freigabetest: letzte Absicherung vor dem Release.','Die Ergebnisse fließen in Testreport und Freigabeempfehlung.'],
+ take:'Erst wenn eine Stufe stabil ist, lohnt sich der Aufwand der nächsten.'},
+mod:{name:'MOD-Testfall',
+ flows:[['req','tc','plan','Testbasis'],['tc','vehicle','test','Vorbedingung'],['vehicle','results','test','OK / nOK / blocked'],['results','triage','defect','bei nOK'],['triage','dev','defect','Fahrzeug · Backend · App']],
+ nodes:['vt'],
+ title:'MOD-Testfall: Login / Enrollment',intro:'Beispiel aus unserer Testfallstruktur – ohne interne Fahrzeugkennungen oder Versionsdaten.',
+ steps:['Vorbedingungen festlegen: Fahrzeug, Backend, App und Benutzerzustand.','Registrierung bzw. Anmeldung als zusammenhängenden End-to-End-Ablauf betrachten.','Aktionen und erwartete Ergebnisse Schritt für Schritt dokumentieren.','Status erfassen: OK, nOK, blocked oder not tested.','Bei Abweichungen zuständiges Team einbeziehen und KPM-Ticket verknüpfen.'],
+ take:'Die Schnittstellen zwischen Fahrzeug, Backend und App gemeinsam betrachten.',takeTitle:'Einordnung'}
+};
+const ORDER=['all','auto','konzept','planung','steuerung','durchfuehrung','automation','defects','freigabe','cloud','bsp1','bsp2','bsp3','bsp4','e2e','cycle','stufen','mod'];
+const AUTO=['konzept','planung','steuerung','durchfuehrung','automation','defects','freigabe','cloud'];
+const OVERVIEW={title:'Meine Gesamtverantwortung',intro:'Zwei parallele Projekte, ein koordinierter Testprozess – von der Anforderung bis zur Freigabeempfehlung. Details über das Menü oder die Bereiche 1–8.',
+ steps:['Anforderungen mit VW klären, Risiken bewerten, Testkonzept festlegen.','Testaktivitäten, Termine und Kapazität für 11 Testingenieure planen.','Durchführung auf Prüfstand, Fahrzeug und Testfahrt koordinieren – QT → VT → Freigabetest.','Testautomatisierung eingeführt: ≈ 30 % kürzere Testlaufzeit.','Defects bewerten, nachverfolgen, eskalieren; Risiken berichten.','Freigabeempfehlung geben – VW entscheidet.'],
+ take:'Ich habe den Testbereich fachlich gesteuert, nicht die VW-Freigabe selbst entschieden.'};
+
+/* pills */
+AUTO.forEach(k=>{const b=document.createElement('button');b.className='pill';b.dataset.p=k;b.textContent=V[k].n+' '+V[k].name;b.onclick=()=>pick(k);$('pills').append(b)});
+
+/* geometry (board coordinates, independent of scale) */
+function rect(id){const e=$(id),r=e.getBoundingClientRect(),b=board.getBoundingClientRect();return{x:(r.left-b.left)/scale,y:(r.top-b.top)/scale,w:r.width/scale,h:r.height/scale}}
+function anchor(a,b){const A=rect(a),B=rect(b),ac={x:A.x+A.w/2,y:A.y+A.h/2},bc={x:B.x+B.w/2,y:B.y+B.h/2},dx=bc.x-ac.x,dy=bc.y-ac.y;
+ if(Math.abs(dx)/(A.w/2)>Math.abs(dy)/(A.h/2))return{x:ac.x+(dx>0?A.w/2:-A.w/2),y:ac.y,h:true};return{x:ac.x,y:ac.y+(dy>0?A.h/2:-A.h/2),h:false}}
+function pathD(a,b){const p=anchor(a,b),q=anchor(b,a);if(p.h&&q.h){const m=(p.x+q.x)/2;return`M${p.x},${p.y} C${m},${p.y} ${m},${q.y} ${q.x},${q.y}`}
+ if(!p.h&&!q.h){const m=(p.y+q.y)/2;return`M${p.x},${p.y} C${p.x},${m} ${q.x},${m} ${q.x},${q.y}`}
+ if(p.h)return`M${p.x},${p.y} C${q.x},${p.y} ${q.x},${p.y} ${q.x},${q.y}`;return`M${p.x},${p.y} C${p.x},${q.y} ${p.x},${q.y} ${q.x},${q.y}`}
+function se(t,a={}){const e=document.createElementNS('http://www.w3.org/2000/svg',t);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e}
+
+let current='all';
+function render(){
+ const mode=current==='auto'?AUTO[autoIdx%AUTO.length]:current;
+ const all=mode==='all';
+ svg.innerHTML='';const W=board.offsetWidth,H=board.offsetHeight;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width',W);svg.setAttribute('height',H);
+ const defs=se('defs');Object.entries(COLORS).forEach(([k,c])=>{const m=se('marker',{id:'a-'+k,markerWidth:8,markerHeight:8,refX:7,refY:4,orient:'auto',markerUnits:'userSpaceOnUse'});m.append(se('path',{d:'M0,0 L8,4 L0,8 z',fill:c}));defs.append(m)});svg.append(defs);
+ let pairs=[],active=new Set();
+ if(all){const seen=new Set();['e2e','stufen','automation','cycle'].forEach(m=>V[m].flows.forEach(f=>{const k=f[0]+'|'+f[1];if(!seen.has(k)){seen.add(k);pairs.push(f)}}))}
+ else{pairs=V[mode].flows;(V[mode].nodes||[]).forEach(n=>active.add(n));pairs.forEach(([a,b])=>{active.add(a);active.add(b)})}
+ document.querySelectorAll('.node').forEach(n=>{n.classList.toggle('active',!all&&active.has(n.id));n.classList.toggle('dim',!all&&!active.has(n.id))});
+ pairs.forEach(([a,b,k,lab,fb],i)=>{if(!$(a)||!$(b))return;const d=pathD(a,b);
+  const path=se('path',{d,class:'flow'+(fb?' feedback':''),stroke:COLORS[k],'marker-end':`url(#a-${k})`,opacity:all?.7:.95});svg.append(path);
+  const c=se('circle',{r:all?3.6:4.6,fill:COLORS[k]});const am=se('animateMotion',{dur:((2.1+(i%4)*.3)/speed).toFixed(2)+'s',begin:(((i*.17)%1.2)/speed).toFixed(2)+'s',repeatCount:'indefinite',path:d});c.append(am);svg.append(c);
+  if(lab&&!all){const L=path.getTotalLength();if(L>70){const pt=path.getPointAtLength(L/2),g=se('g'),t=se('text',{x:pt.x,y:pt.y+3.5,class:'label','text-anchor':'middle'});t.textContent=lab;g.append(t);svg.append(g);const bb=t.getBBox();g.insertBefore(se('rect',{x:bb.x-5,y:bb.y-2,width:bb.width+10,height:bb.height+4,rx:8,class:'lblbg',stroke:COLORS[k]}),t)}}});
+ // side panel
+ const v=all?OVERVIEW:V[mode];
+ $('dtitle').textContent=v.title;$('intro').textContent=v.intro;
+ $('steps').innerHTML=v.steps.map((s,i)=>`<div class="step"><div class="num">${i+1}</div><div class="txt">${s}</div></div>`).join('');
+ $('takeTitle').textContent=v.takeTitle||(mode==='cloud'?'Mehrwert für PTA':'Meine Verantwortung');$('take').textContent=v.take;$('extra').innerHTML=v.extra||'';
+ const label=all?'Übersicht · Gesamtprozess live':(current==='auto'?`Auto-Präsentation ${autoIdx%AUTO.length+1}/${AUTO.length} · `:'Ausgewählt · ')+(V[mode].n?V[mode].n+' · ':'')+V[mode].name;
+ $('status').textContent=label;$('stepcount').textContent=all?'GESAMTÜBERBLICK':(V[mode].n?`BEREICH ${V[mode].n} / 8`:(mode.startsWith('bsp')?'PROJEKTBEISPIEL':'END-TO-END-ABLAUF'));
+ document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',all||p.dataset.p===mode));
+ const pos=ORDER.indexOf(current);$('progress').style.width=`${(pos+1)/ORDER.length*100}%`;
+ try{playing?svg.unpauseAnimations():svg.pauseAnimations()}catch(e){}
+}
+function stopAuto(){clearTimeout(autoTimer);autoTimer=null}
+function schedule(){stopAuto();if(current!=='auto'||!playing)return;autoTimer=setTimeout(()=>{autoIdx=(autoIdx+1)%AUTO.length;render();schedule()},Math.max(5000,11000/speed))}
+function pick(k){current=k;sel.value=k;if(k==='auto'){autoIdx=0}render();schedule()}
+function step(d){if(current==='auto'){autoIdx=(autoIdx+d+AUTO.length)%AUTO.length;render();schedule();return}const i=ORDER.indexOf(current);pick(ORDER[(i+d+ORDER.length)%ORDER.length])}
+sel.onchange=()=>pick(sel.value);
+$('prev').onclick=$('prevTop').onclick=()=>step(-1);$('next').onclick=$('nextTop').onclick=()=>step(1);
+$('speed').onchange=e=>{speed=parseFloat(e.target.value)||1;render();schedule()};
+$('theme').onclick=()=>{const d=document.body.dataset.theme==='dark';document.body.dataset.theme=d?'light':'dark';$('theme').textContent=d?'◐ Dunkel':'◐ Hell';render()};
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Ⅱ Pause':'▶ Play';render();schedule()};
+function applyScale(){board.style.transform=`scale(${scale})`;sizer.style.width=board.offsetWidth*scale+'px';sizer.style.height=board.offsetHeight*scale+'px';render()}
+function fit(){scale=Math.min(1.2,Math.max(.4,(stage.clientWidth-34)/board.offsetWidth));applyScale()}
+$('fit').onclick=fit;$('plus').onclick=()=>{scale=Math.min(1.4,scale+.07);applyScale()};$('minus').onclick=()=>{scale=Math.max(.35,scale-.07);applyScale()};
+$('full').onclick=async()=>{try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch(e){}};
+document.addEventListener('fullscreenchange',()=>setTimeout(fit,120));
+document.querySelectorAll('.node').forEach(n=>{n.tabIndex=0;n.addEventListener('click',()=>{const hit=AUTO.find(k=>V[k].flows.some(f=>f[0]===n.id||f[1]===n.id)||(V[k].nodes||[]).includes(n.id));if(hit)pick(hit)});n.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();n.click()}})});
+document.addEventListener('keydown',e=>{if(e.target===sel)return;const k=e.key.toLowerCase();
+ if(/^[1-8]$/.test(k))pick(AUTO[+k-1]);else if(k==='a')pick('all');else if(k==='s')pick('auto');else if(k==='f')$('full').click();
+ else if(k===' '){e.preventDefault();$('play').click()}else if(k==='arrowright'){e.preventDefault();step(1)}else if(k==='arrowleft'){e.preventDefault();step(-1)}});
+window.addEventListener('resize',()=>setTimeout(fit,80));
+window.addEventListener('load',()=>{if(!playing)$('play').textContent='▶ Play';fit()});
+</script>
+</body>
+</html>
